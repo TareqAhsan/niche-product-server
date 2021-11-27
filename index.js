@@ -5,11 +5,12 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 const { MongoClient } = require("mongodb");
+const stripe = require("stripe")(process.env.STRIPE_KEY);
 
 const port = process.env.PORT || 5000;
 // niche-products-2f8e9-firebase-admins.json
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -110,9 +111,8 @@ async function run() {
           const result = await usersCollection.updateOne(filter, updateDoc);
           res.send(result);
         }
-      }
-      else {
-        res.status(403).json({message:'You dont have access'})
+      } else {
+        res.status(403).json({ message: "You dont have access" });
       }
     });
     // check if the user is admin or not using get api with email
@@ -184,6 +184,38 @@ async function run() {
       const body = req.body;
       const result = await reviewCollection.insertOne(body);
       res.send(result);
+    });
+
+    // for payment system
+
+    app.get("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await orderCollection.findOne(filter);
+      res.send(result);
+    });
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const paymentInfo = req.body;
+      const amount = paymentInfo.price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+      //update oreder for payment
+      app.put('/orders/:id',async(req,res)=>{
+        const id = req.params.id
+        const payment = req.body
+        const filter = {_id:ObjectId(id)}
+        const updatedDoc = {$set:{payment:payment}}
+        const result = await orderCollection.updateOne(filter,updatedDoc)
+        res.send(result)
+      })
     });
   } finally {
     //    await client.close()
