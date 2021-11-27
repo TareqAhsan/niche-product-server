@@ -194,7 +194,7 @@ run().catch(console.dir);
 //
 app.get("/", (req, res) => {
   //   console.log("hello sunglassShop");
-  res.send("hello from sunglass");
+  res.send("hello from sunglassShopBd");
 });
 app.listen(port, () => {
   console.log("listening on port ", port);
