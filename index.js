@@ -201,21 +201,21 @@ async function run() {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
-        payment_method_types: ['card']
+        payment_method_types: ["card"],
       });
 
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
-      //update oreder for payment
-      app.put('/orders/:id',async(req,res)=>{
-        const id = req.params.id
-        const payment = req.body
-        const filter = {_id:ObjectId(id)}
-        const updatedDoc = {$set:{payment:payment}}
-        const result = await orderCollection.updateOne(filter,updatedDoc)
-        res.send(result)
-      })
+    });
+    //update oreder for payment
+    app.put("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const payment = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = { $set: { payment: payment } };
+      const result = await orderCollection.updateOne(filter, updatedDoc);
+      res.send(result);
     });
   } finally {
     //    await client.close()
